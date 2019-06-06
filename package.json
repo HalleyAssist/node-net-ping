@@ -7,7 +7,7 @@
     "example": "example"
   },
   "dependencies": {
-    "raw-socket": "*"
+    "raw-socket": "git+https://github.com/HalleyAssist/node-raw-socket.git"
   },
   "contributors": [
     {
