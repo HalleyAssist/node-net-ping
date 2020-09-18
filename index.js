@@ -358,7 +358,7 @@ Session.prototype._generateId = function () {
 	}
 }
 
-Session.prototype.pingHost = function (target, callback) {
+Session.prototype.pingHost = function (target, callback, options = {}) {
 	var id = this._generateId ();
 	if (! id) {
 		callback (new Error ("Too many requests outstanding"), target);
@@ -370,7 +370,8 @@ Session.prototype.pingHost = function (target, callback) {
 		retries: this.retries,
 		timeout: this.timeout,
 		callback: callback,
-		target: target
+		target: target,
+		options
 	};
 
 	this.reqQueue (req);
@@ -429,11 +430,12 @@ Session.prototype.setTTL = function (ttl) {
 }
 
 Session.prototype.toBuffer = function (req) {
-	var buffer = new Buffer (this.packetSize);
+	const packetSize = req.options.packetSize || this.packetSize
+	var buffer = new Buffer (packetSize);
 
 	// Since our buffer represents real memory we should initialise it to
 	// prevent its previous contents from leaking to the network.
-	for (var i = 8; i < this.packetSize; i++)
+	for (var i = 8; i < packetSize; i++)
 		buffer[i] = 0;
 
 	var type = this.addressFamily == raw.AddressFamily.IPv6 ? 128 : 8;
