@@ -7,6 +7,7 @@
     "example": "example"
   },
   "dependencies": {
+    "ip-packet": "^1.1.0",
     "raw-socket": "git+https://github.com/HalleyAssist/node-raw-socket.git"
   },
   "devDependencies": {
