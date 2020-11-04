@@ -226,13 +226,10 @@ Session.prototype.fromBuffer = function (buffer) {
 	var id = buffer.readUInt16BE (offset + 6);
 	var req = this.reqs[id];
 
-	if (req) {
-		req.type = type;
-		req.code = code;
-		return req;
-	} else {
-		return null;
-	}
+	if (!req)  return null
+	req.type = type;
+	req.code = code;
+	return req;
 };
 
 Session.prototype.onBeforeSocketSend = function (req) {
