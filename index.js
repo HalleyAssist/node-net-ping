@@ -253,6 +253,7 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 	if (this._debug)
 		this._debugResponse (source, buffer);
 
+	const now = new Date ()
 	var req = this.fromBuffer (buffer);
 	if (req) {
 		/**
@@ -275,44 +276,44 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
 				req.callback (new DestinationUnreachableError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 2) {
 				req.callback (new PacketTooBigError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 3) {
 				req.callback (new TimeExceededError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 4) {
 				req.callback (new ParameterProblemError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 129) {
 				req.callback (null, req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else {
 				req.callback (new Error ("Unknown response type '" + req.type
 						+ "' (source=" + source + ")"), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			}
 		} else {
 			if (req.type == 0) {
 				req.callback (null, req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 3) {
 				req.callback (new DestinationUnreachableError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 4) {
 				req.callback (new SourceQuenchError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 5) {
 				req.callback (new RedirectReceivedError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else if (req.type == 11) {
 				req.callback (new TimeExceededError (source), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			} else {
 				req.callback (new Error ("Unknown response type '" + req.type
 						+ "' (source=" + source + ")"), req.target,
-						req.sent, new Date ());
+						req.sent, now);
 			}
 		}
 	}
@@ -376,7 +377,7 @@ Session.prototype.pingHost = function (target, callback, options = {}) {
 
 	this.reqQueue (req);
 
-	return this;
+	return ret;
 };
 
 Session.prototype.reqQueue = function (req) {
