@@ -1,7 +1,8 @@
 
-var events = require ("events");
-var net = require ("net");
-var util = require ("util");
+const events = require ("events"),
+	  raw = require ("raw-socket"),
+	  util = require ("util"),
+	  IpPacket = require('ip-packet')
 
 function _expandConstantObject (object) {
 	var keys = [];
@@ -236,6 +237,8 @@ Session.prototype.fromBuffer = function (buffer) {
 
 Session.prototype.onBeforeSocketSend = function (req) {
 	this.setTTL (req.ttl ? req.ttl : this.defaultTTL);
+	
+	this.getSocket ().setOption (raw.SocketLevel.IPPROTO_IP, raw.SocketOption.IP_HDRINCL, req.options.src ? 1 : 0);
 }
 
 Session.prototype.onSocketClose = function () {
@@ -436,6 +439,22 @@ Session.prototype.setTTL = function (ttl) {
 	this.ttl = ttl;
 }
 
+Session.prototype.buildIpHeader = function(req, payload){
+
+	const protocol = this.addressFamily == raw.AddressFamily.IPv6
+			? raw.Protocol.ICMPv6
+			: raw.Protocol.ICMP;
+	const version = this.addressFamily == raw.AddressFamily.IPv6 ? 6 : 4
+
+	return IpPacket.encode({
+		version,
+		protocol,
+		sourceIp: req.options.src,
+		destinationIp: req.target,
+		data: payload
+	})
+}
+
 Session.prototype.toBuffer = function (req) {
 	const packetSize = req.options.packetSize || this.packetSize
 	var buffer = Buffer.alloc (packetSize);
@@ -449,6 +468,10 @@ Session.prototype.toBuffer = function (req) {
 	buffer.writeUInt16BE (req.id, 6);
 
 	raw.writeChecksum (buffer, 2, raw.createChecksum (buffer));
+
+	if(req.options.src){
+		buffer = this.buildIpHeader(req, buffer)
+	}
 
 	return buffer;
 };
