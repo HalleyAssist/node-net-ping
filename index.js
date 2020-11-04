@@ -138,16 +138,15 @@ Session.prototype.getSocket = function () {
 			? raw.Protocol.ICMPv6
 			: raw.Protocol.ICMP;
 
-	var me = this;
 	var options = {
 		addressFamily: this.addressFamily,
 		protocol: protocol
 	};
 
 	this.socket = raw.createSocket (options);
-	this.socket.on ("error", this.onSocketError.bind (me));
-	this.socket.on ("close", this.onSocketClose.bind (me));
-	this.socket.on ("message", this.onSocketMessage.bind (me));
+	this.socket.on ("error", this.onSocketError.bind (this));
+	this.socket.on ("close", this.onSocketClose.bind (this));
+	this.socket.on ("message", this.onSocketMessage.bind (this));
 	
 	this.ttl = null;
 	this.setTTL (this.defaultTTL);
@@ -326,8 +325,7 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 		this.reqRemove (req.id);
 		req.callback (error, req.target, req.sent, req.sent);
 	} else {
-		var me = this;
-		req.timer = setTimeout (this.onTimeout.bind (me, req), req.timeout);
+		req.timer = setTimeout (this.onTimeout.bind (this, req), req.timeout);
 	}
 };
 
@@ -420,13 +418,12 @@ Session.prototype.reqRemove = function (id) {
 
 Session.prototype.send = function (req) {
 	var buffer = req.buffer;
-	var me = this;
 	// Resume readable events if the raw socket is paused
 	if (this.getSocket ().recvPaused)
 		this.getSocket ().resumeRecv ();
 	this.getSocket ().send (buffer, 0, buffer.length, req.target,
-			this.onBeforeSocketSend.bind (me, req),
-			this.onSocketSend.bind (me, req));
+			this.onBeforeSocketSend.bind (this, req),
+			this.onSocketSend.bind (this, req));
 };
 
 Session.prototype.setTTL = function (ttl) {
@@ -489,7 +486,6 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 
 		req.ttl++;
 		req.id = id;
-		var me = this;
 		req.retries = this.retries;
 		req.sent = null;
 		this.reqQueue (req);
@@ -537,8 +533,6 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 		maxHopTimeouts: maxHopTimeouts,
 		timeouts: 0
 	};
-	
-	var me = this;
 
 	var req = {
 		id: id,
@@ -547,7 +541,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 		ttl: startTtl,
 		target: target
 	};
-	req.callback = me.traceRouteCallback.bind (me, trace, req);
+	req.callback = this.traceRouteCallback.bind (this, trace, req);
 	
 	this.reqQueue (req);
 
