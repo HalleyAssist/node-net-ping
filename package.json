@@ -9,6 +9,9 @@
   "dependencies": {
     "raw-socket": "git+https://github.com/HalleyAssist/node-raw-socket.git"
   },
+  "devDependencies": {
+    "mocha": "^8.2.1"
+  },
   "contributors": [
     {
       "name": "Stephen Vickers",
@@ -28,8 +31,8 @@
     "icmp",
     "monitor",
     "monitoring",
-  	 "net",
-  	 "network",
+    "net",
+    "network",
     "ping",
     "trace",
     "trace-route",
