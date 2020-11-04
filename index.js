@@ -114,12 +114,12 @@ Session.prototype.close = function () {
 Session.prototype._debugRequest = function (target, req) {
 	console.log ("request: addressFamily=" + this.addressFamily + " target="
 			+ req.target + " id=" + req.id + " buffer="
-			+ req.buffer.toString ("hex"));
+			+ req.buffer.toString ("hex")+ " time="+Date.now());
 }
 
 Session.prototype._debugResponse = function (source, buffer) {
 	console.log ("response: addressFamily=" + this.addressFamily + " source="
-			+ source + " buffer=" + buffer.toString ("hex"));
+			+ source + " buffer=" + buffer.toString ("hex")+ " time="+Date.now());
 }
 
 Session.prototype.flush = function (error) {
