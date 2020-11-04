@@ -326,16 +326,8 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 		this.reqRemove (req.id);
 		req.callback (error, req.target, req.sent, req.sent);
 	} else {
-		if(req.timer) clearTimeout(req.timeout)
-		else{
-			// req.timer is not set on the first send, subsequent resends have a .timer property set
-			const oldCallback = req.callback
-			req.callback = (err, target)=>{
-				clearTimeout(req.timer)
-				oldCallback(err, target)
-			}
-		}
-		req.timer = setTimeout (this.onTimeout.bind (this, req), req.timeout);
+		var me = this;
+		req.timer = setTimeout (this.onTimeout.bind (me, req), req.timeout);
 	}
 };
 
