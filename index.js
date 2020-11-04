@@ -439,12 +439,7 @@ Session.prototype.setTTL = function (ttl) {
 
 Session.prototype.toBuffer = function (req) {
 	const packetSize = req.options.packetSize || this.packetSize
-	var buffer = new Buffer (packetSize);
-
-	// Since our buffer represents real memory we should initialise it to
-	// prevent its previous contents from leaking to the network.
-	for (var i = 8; i < packetSize; i++)
-		buffer[i] = 0;
+	var buffer = Buffer.alloc (packetSize);
 
 	var type = this.addressFamily == raw.AddressFamily.IPv6 ? 128 : 8;
 
