@@ -379,7 +379,8 @@ Session.prototype.pingHost = function (target, callback = undefined, options = {
 		timeout: this.timeout,
 		callback: callback,
 		target: target,
-		options
+		options,
+		timer: null
 	};
 
 	this.reqQueue (req);
