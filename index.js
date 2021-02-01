@@ -370,7 +370,7 @@ Session.prototype.pingHost = function (target, callback = undefined, options = {
 	var id = this._generateId ();
 	if (! id) {
 		callback (new Error ("Too many requests outstanding"), target);
-		return this;
+		return ret;
 	}
 
 	var req = {
