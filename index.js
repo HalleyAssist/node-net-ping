@@ -357,12 +357,6 @@ Session.prototype._generateId = function () {
 }
 
 Session.prototype.pingHost = function (target, callback = undefined, options = {}) {
-	var id = this._generateId ();
-	if (! id) {
-		callback (new Error ("Too many requests outstanding"), target);
-		return this;
-	}
-
 	let ret = this
 	if(!callback){
 		ret = new Promise((resolve, reject)=>{
@@ -373,8 +367,14 @@ Session.prototype.pingHost = function (target, callback = undefined, options = {
 		})
 	}
 
+	var id = this._generateId ();
+	if (! id) {
+		callback (new Error ("Too many requests outstanding"), target);
+		return this;
+	}
+
 	var req = {
-		id: id,
+		id,
 		retries: this.retries,
 		timeout: this.timeout,
 		callback: callback,
@@ -403,8 +403,10 @@ Session.prototype.reqQueue = function (req) {
 Session.prototype.reqRemove = function (id) {
 	var req = this.reqs[id];
 	if (req) {
-		clearTimeout (req.timer);
-		delete req.timer;
+		if(req.timer){
+			clearTimeout (req.timer);
+			req.timer = null
+		}
 		delete this.reqs[req.id];
 		this.reqsPending--;
 	}
