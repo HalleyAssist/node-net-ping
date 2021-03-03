@@ -439,6 +439,14 @@ Session.prototype.setTTL = function (ttl) {
 	this.ttl = ttl;
 }
 
+Session.prototype.setInterface = function (iface) {
+	if(this.iface == iface) return
+	iface = Buffer.from(iface)
+	this.getSocket ().setOption ( raw.SocketLevel.SOL_SOCKET, raw.SocketOption.SO_BINDTODEVICE, iface, iface.length);
+	this.iface = iface;
+}
+
+
 Session.prototype.buildIpHeader = function(req, payload){
 
 	const protocol = this.addressFamily == raw.AddressFamily.IPv6
@@ -451,7 +459,8 @@ Session.prototype.buildIpHeader = function(req, payload){
 		protocol,
 		sourceIp: req.options.src,
 		destinationIp: req.target,
-		data: payload
+		data: payload,
+		ttl: this.ttl || this.defaultTTL
 	})
 }
 
