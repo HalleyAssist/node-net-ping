@@ -324,7 +324,11 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 		this.reqRemove (req.id);
 		req.callback (error, req.target, req.sent, req.sent);
 	} else {
-		req.timer = setTimeout (this.onTimeout.bind (this, req), req.timeout);
+		if(req.aggressiveCount){
+			this.send(req)
+		}else{
+			req.timer = setTimeout (this.onTimeout.bind (this, req), req.timeout);
+		}
 	}
 };
 
@@ -380,7 +384,8 @@ Session.prototype.pingHost = function (target, callback = undefined, options = {
 		callback: callback,
 		target: target,
 		options,
-		timer: null
+		timer: null,
+		aggressiveCount: options.aggressiveCount
 	};
 
 	this.reqQueue (req);
@@ -423,6 +428,11 @@ Session.prototype.send = function (req) {
 	// Resume readable events if the raw socket is paused
 	if (this.getSocket ().recvPaused)
 		this.getSocket ().resumeRecv ();
+
+	if(req.aggressiveCount){
+		req.aggressiveCount --
+	}
+	
 	this.getSocket ().send (buffer, 0, buffer.length, req.target,
 			this.onBeforeSocketSend.bind (this, req),
 			this.onSocketSend.bind (this, req));
