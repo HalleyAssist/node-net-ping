@@ -542,6 +542,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 	var maxHopTimeouts = 3;
 	var startTtl = 1;
 	var ttl = this.ttl;
+	var options = ttlOrOptions
 
 	if (typeof ttlOrOptions == "object") {
 		if (ttlOrOptions.ttl)
@@ -552,6 +553,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 			startTtl = ttlOrOptions.startTtl;
 	} else {
 		ttl = ttlOrOptions;
+		options = {ttl}
 	}
 
 	var id = this._generateId ();
@@ -574,6 +576,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 		id: id,
 		retries: this.retries,
 		timeout: this.timeout,
+		options: options,
 		ttl: startTtl,
 		target: target
 	};
