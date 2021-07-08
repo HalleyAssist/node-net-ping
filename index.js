@@ -274,44 +274,44 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
 				req.callback (new DestinationUnreachableError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 2) {
 				req.callback (new PacketTooBigError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 3) {
 				req.callback (new TimeExceededError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 4) {
 				req.callback (new ParameterProblemError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 129) {
 				req.callback (null, req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else {
 				req.callback (new Error ("Unknown response type '" + req.type
 						+ "' (source=" + source + ")"), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			}
 		} else {
 			if (req.type == 0) {
 				req.callback (null, req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 3) {
 				req.callback (new DestinationUnreachableError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 4) {
 				req.callback (new SourceQuenchError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 5) {
 				req.callback (new RedirectReceivedError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else if (req.type == 11) {
 				req.callback (new TimeExceededError (source), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			} else {
 				req.callback (new Error ("Unknown response type '" + req.type
 						+ "' (source=" + source + ")"), req.target,
-						req.sent, now);
+						req.sent, now, source);
 			}
 		}
 	}
@@ -496,8 +496,8 @@ Session.prototype.toBuffer = function (req) {
 };
 
 Session.prototype.traceRouteCallback = function (trace, req, error, target,
-		sent, rcvd) {
-	if (trace.feedCallback (error, target, req.ttl, sent, rcvd)) {
+		sent, rcvd, source = null) {
+	if (trace.feedCallback (error, target, req.ttl, sent, rcvd, source)) {
 		trace.doneCallback (new Error ("Trace forcibly stopped"), target);
 		return;
 	}
