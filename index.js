@@ -269,7 +269,9 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 				return;
 		}
 		
-		this.reqRemove (req.id);
+		if(source == req.target) {
+      this.reqRemove (req.id);
+    }
 		
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
@@ -327,6 +329,7 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 		if(req.aggressiveCount){
 			this.send(req)
 		}else{
+      if(req.timer) clearTimeout(req.timer);
 			req.timer = setTimeout (this.onTimeout.bind (this, req), req.timeout);
 		}
 	}
@@ -498,23 +501,27 @@ Session.prototype.toBuffer = function (req) {
 Session.prototype.traceRouteCallback = function (trace, req, error, target,
 		sent, rcvd, source = null) {
 	if (trace.feedCallback (error, target, req.ttl, sent, rcvd, source)) {
+    if(req.timer) clearTimeout(req.timer);
 		trace.doneCallback (new Error ("Trace forcibly stopped"), target);
 		return;
 	}
 
 	if (error) {
 		if (req.ttl >= trace.ttl) {
+      if(req.timer) clearTimeout(req.timer);
 			trace.doneCallback (error, target);
 			return;
 		}
 		
 		if ((error instanceof RequestTimedOutError) && ++trace.timeouts >= trace.maxHopTimeouts) {
+      if(req.timer) clearTimeout(req.timer);
 			trace.doneCallback (new Error ("Too many timeouts"), target);
 			return;
 		}
 
 		var id = this._generateId ();
 		if (! id) {
+      if(req.timer) clearTimeout(req.timer);
 			trace.doneCallback (new Error ("Too many requests outstanding"),
 					target);
 			return;
@@ -526,6 +533,7 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 		req.sent = null;
 		this.reqQueue (req);
 	} else {
+    if(req.timer) clearTimeout(req.timer);
 		trace.doneCallback (null, target);
 	}
 }
