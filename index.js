@@ -125,8 +125,8 @@ Session.prototype._debugResponse = function (source, buffer) {
 Session.prototype.flush = function (error) {
 	for (var id in this.reqs) {
 		var req = this.reqRemove (id);
-		var sent = req.sent ? req.sent : new Date ();
-		req.callback (error, req.target, sent, new Date ());
+		var sent = req.sent ? req.sent : process.hrtime();
+		req.callback (error, req.target, sent, process.hrtime());
 	}
 };
 
@@ -251,7 +251,7 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 	if (this._debug)
 		this._debugResponse (source, buffer);
 
-	const now = new Date ()
+	const now = process.hrtime()
 	var req = this.fromBuffer (buffer);
 	if (req) {
 		/**
@@ -321,7 +321,7 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 
 Session.prototype.onSocketSend = function (req, error, bytes) {
 	if (! req.sent)
-		req.sent = new Date ();
+		req.sent = process.hrtime();
 	if (error) {
 		this.reqRemove (req.id);
 		req.callback (error, req.target, req.sent, req.sent);
@@ -342,7 +342,7 @@ Session.prototype.onTimeout = function (req) {
 	} else {
 		this.reqRemove (req.id);
 		req.callback (new RequestTimedOutError ("Request timed out"),
-				req.target, req.sent, new Date ());
+				req.target, req.sent, process.hrtime());
 	}
 };
 
@@ -566,7 +566,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 
 	var id = this._generateId ();
 	if (! id) {
-		var sent = new Date ();
+		var sent = process.hrtime();
 		doneCallback (new Error ("Too many requests outstanding"), target,
 				sent, sent);
 		return this;
