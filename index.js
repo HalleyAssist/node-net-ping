@@ -473,7 +473,7 @@ Session.prototype.buildIpHeader = function(req, payload){
 		sourceIp: req.options.src,
 		destinationIp: req.target,
 		data: payload,
-		ttl: this.ttl || this.defaultTTL
+		ttl: req.ttl || this.ttl || this.defaultTTL
 	})
 }
 
