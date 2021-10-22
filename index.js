@@ -270,8 +270,8 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 		}
 		
 		if(source == req.target) {
-      this.reqRemove (req.id);
-    }
+			this.reqRemove (req.id);
+		}
 		
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
@@ -402,7 +402,11 @@ Session.prototype.reqQueue = function (req) {
 	if (this._debug)
 		this._debugRequest (req.target, req);
 
+	const previousRequest = this.reqs[req.id] 
 	this.reqs[req.id] = req;
+	if(previousRequest){
+		req.sent = previousRequest.sent
+	}
 	this.reqsPending++;
 	this.send (req);
 	
@@ -588,6 +592,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 		ttl: startTtl,
 		target: target
 	};
+
 	req.callback = this.traceRouteCallback.bind (this, trace, req);
 	
 	this.reqQueue (req);
