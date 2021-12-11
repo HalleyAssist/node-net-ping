@@ -517,7 +517,7 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 			return;
 		}
 		
-		if ((error instanceof RequestTimedOutError) && ++trace.timeouts >= trace.maxHopTimeouts) {
+		if ((error instanceof RequestTimedOutError) && ++trace.timeouts > trace.maxHopTimeouts) {
       if(req.timer) clearTimeout(req.timer);
 			trace.doneCallback (new Error ("Too many timeouts"), target);
 			return;
@@ -551,7 +551,7 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 		ttlOrOptions = {ttl: this.ttl};
 	}
 
-	var maxHopTimeouts = 3;
+	var maxHopTimeouts = 5;
 	var startTtl = 1;
 	var ttl = this.ttl;
 	var options = ttlOrOptions
