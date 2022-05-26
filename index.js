@@ -47,9 +47,9 @@ function RedirectReceivedError(source) {
 }
 util.inherits(RedirectReceivedError, Error);
 
-function RequestTimedOutError() {
+function RequestTimedOutError(message) {
 	this.name = "RequestTimedOutError";
-	this.message = "Request timed out";
+	this.message = message;
 }
 util.inherits(RequestTimedOutError, Error);
 
@@ -341,7 +341,7 @@ Session.prototype.onTimeout = function (req) {
 		this.send(req);
 	} else {
 		this.reqRemove(req.id);
-		req.callback(new RequestTimedOutError("Request timed out"),
+		req.callback(new RequestTimedOutError(`Request ${req.id} timed out`),
 			req.target, req.sent, process.hrtime());
 	}
 };
@@ -487,7 +487,7 @@ Session.prototype.buildIpHeader = function (req, payload) {
 		sourceIp: req.options.src,
 		destinationIp: req.target,
 		data: payload,
-		ttl: req.ttl || this.ttl || this.defaultTTL
+		ttl: req.ttl || this.defaultTTL
 	})
 }
 
