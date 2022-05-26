@@ -1,15 +1,15 @@
 
-const events = require ("events"),
-	  raw = require ("raw-socket"),
-	  util = require ("util"),
-	  IpPacket = require('ip-packet')
+const events = require("events"),
+	raw = require("raw-socket"),
+	util = require("util"),
+	IpPacket = require('ip-packet')
 
-function _expandConstantObject (object) {
+function _expandConstantObject(object) {
 	var keys = [];
 	for (var key in object)
-		keys.push (key);
+		keys.push(key);
 	for (var i = 0; i < keys.length; i++)
-		object[object[keys[i]]] = parseInt (keys[i]);
+		object[object[keys[i]]] = parseInt(keys[i]);
 }
 
 var NetworkProtocol = {
@@ -17,57 +17,57 @@ var NetworkProtocol = {
 	2: "IPv6"
 };
 
-_expandConstantObject (NetworkProtocol);
+_expandConstantObject(NetworkProtocol);
 
-function DestinationUnreachableError (source) {
+function DestinationUnreachableError(source) {
 	this.name = "DestinationUnreachableError";
 	this.message = "Destination unreachable (source=" + source + ")";
 	this.source = source;
 }
-util.inherits (DestinationUnreachableError, Error);
+util.inherits(DestinationUnreachableError, Error);
 
-function PacketTooBigError (source) {
+function PacketTooBigError(source) {
 	this.name = "PacketTooBigError";
 	this.message = "Packet too big (source=" + source + ")";
 	this.source = source;
 }
-util.inherits (PacketTooBigError, Error);
+util.inherits(PacketTooBigError, Error);
 
-function ParameterProblemError (source) {
+function ParameterProblemError(source) {
 	this.name = "ParameterProblemError";
 	this.message = "Parameter problem (source=" + source + ")";
 	this.source = source;
 }
-util.inherits (ParameterProblemError, Error);
+util.inherits(ParameterProblemError, Error);
 
-function RedirectReceivedError (source) {
+function RedirectReceivedError(source) {
 	this.name = "RedirectReceivedError";
 	this.message = "Redirect received (source=" + source + ")";
 	this.source = source;
 }
-util.inherits (RedirectReceivedError, Error);
+util.inherits(RedirectReceivedError, Error);
 
-function RequestTimedOutError () {
+function RequestTimedOutError() {
 	this.name = "RequestTimedOutError";
 	this.message = "Request timed out";
 }
-util.inherits (RequestTimedOutError, Error);
+util.inherits(RequestTimedOutError, Error);
 
-function SourceQuenchError (source) {
+function SourceQuenchError(source) {
 	this.name = "SourceQuenchError";
 	this.message = "Source quench (source=" + source + ")";
 	this.source = source;
 }
-util.inherits (SourceQuenchError, Error);
+util.inherits(SourceQuenchError, Error);
 
-function TimeExceededError (source) {
+function TimeExceededError(source) {
 	this.name = "TimeExceededError";
 	this.message = "Time exceeded (source=" + source + ")";
 	this.source = source;
 }
-util.inherits (TimeExceededError, Error);
+util.inherits(TimeExceededError, Error);
 
-function Session (options) {
+function Session(options) {
 	this.retries = (options && options.retries != undefined) ? options.retries : 1;
 	this.timeout = (options && options.timeout) ? options.timeout : 2000;
 
@@ -77,20 +77,20 @@ function Session (options) {
 		this.packetSize = 12;
 
 	this.addressFamily = (options && options.networkProtocol
-				&& options.networkProtocol == NetworkProtocol.IPv6)
-			? raw.AddressFamily.IPv6
-			: raw.AddressFamily.IPv4;
+		&& options.networkProtocol == NetworkProtocol.IPv6)
+		? raw.AddressFamily.IPv6
+		: raw.AddressFamily.IPv4;
 
 	this._debug = (options && options._debug) ? true : false;
-	
+
 	this.defaultTTL = (options && options.ttl) ? options.ttl : 128;
-	
+
 	this.sessionId = (options && options.sessionId)
-			? options.sessionId
-			: process.pid;
-	
+		? options.sessionId
+		: process.pid;
+
 	this.sessionId = this.sessionId % 65535;
-	
+
 	this.nextId = 1;
 
 	this.socket = null;
@@ -98,35 +98,35 @@ function Session (options) {
 	this.reqs = {};
 	this.reqsPending = 0;
 
-	this.getSocket ();
+	this.getSocket();
 };
 
-util.inherits (Session, events.EventEmitter);
+util.inherits(Session, events.EventEmitter);
 
 Session.prototype.close = function () {
 	if (this.socket)
-		this.socket.close ();
-	this.flush (new Error ("Socket forcibly closed"));
+		this.socket.close();
+	this.flush(new Error("Socket forcibly closed"));
 	delete this.socket;
 	return this;
 };
 
 Session.prototype._debugRequest = function (target, req) {
-	console.log ("request: addressFamily=" + this.addressFamily + " target="
-			+ req.target + " id=" + req.id + " buffer="
-			+ req.buffer.toString ("hex")+ " time="+Date.now());
+	console.log("request: addressFamily=" + this.addressFamily + " target="
+		+ req.target + " id=" + req.id + " buffer="
+		+ req.buffer.toString("hex") + " time=" + Date.now());
 }
 
 Session.prototype._debugResponse = function (source, buffer) {
-	console.log ("response: addressFamily=" + this.addressFamily + " source="
-			+ source + " buffer=" + buffer.toString ("hex")+ " time="+Date.now());
+	console.log("response: addressFamily=" + this.addressFamily + " source="
+		+ source + " buffer=" + buffer.toString("hex") + " time=" + Date.now());
 }
 
 Session.prototype.flush = function (error) {
 	for (var id in this.reqs) {
-		var req = this.reqRemove (id);
+		var req = this.reqRemove(id);
 		var sent = req.sent ? req.sent : process.hrtime();
-		req.callback (error, req.target, sent, process.hrtime());
+		req.callback(error, req.target, sent, process.hrtime());
 	}
 };
 
@@ -135,22 +135,22 @@ Session.prototype.getSocket = function () {
 		return this.socket;
 
 	var protocol = this.addressFamily == raw.AddressFamily.IPv6
-			? raw.Protocol.ICMPv6
-			: raw.Protocol.ICMP;
+		? raw.Protocol.ICMPv6
+		: raw.Protocol.ICMP;
 
 	var options = {
 		addressFamily: this.addressFamily,
 		protocol: protocol
 	};
 
-	this.socket = raw.createSocket (options);
-	this.socket.on ("error", this.onSocketError.bind (this));
-	this.socket.on ("close", this.onSocketClose.bind (this));
-	this.socket.on ("message", this.onSocketMessage.bind (this));
-	
+	this.socket = raw.createSocket(options);
+	this.socket.on("error", this.onSocketError.bind(this));
+	this.socket.on("close", this.onSocketClose.bind(this));
+	this.socket.on("message", this.onSocketMessage.bind(this));
+
 	this.ttl = null;
-	this.setTTL (this.defaultTTL);
-	
+	this.setTTL(this.defaultTTL);
+
 	return this.socket;
 };
 
@@ -163,12 +163,12 @@ Session.prototype.fromBuffer = function (buffer) {
 
 		if (buffer.length - offset < 8)
 			return;
-		
+
 		// We don't believe any IPv6 options will be passed back to us so we
 		// don't attempt to pass them here.
 
-		type = buffer.readUInt8 (offset);
-		code = buffer.readUInt8 (offset + 1);
+		type = buffer.readUInt8(offset);
+		code = buffer.readUInt8(offset + 1);
 	} else {
 		// Need at least 20 bytes for an IP header, and it should be IPv4
 		if (buffer.length < 20 || (buffer[0] & 0xf0) != 0x40)
@@ -187,8 +187,8 @@ Session.prototype.fromBuffer = function (buffer) {
 		if (buffer.length - ip_icmp_offset < 8)
 			return;
 
-		type = buffer.readUInt8 (ip_icmp_offset);
-		code = buffer.readUInt8 (ip_icmp_offset + 1);
+		type = buffer.readUInt8(ip_icmp_offset);
+		code = buffer.readUInt8(ip_icmp_offset + 1);
 
 		// For error type responses the sequence and identifier cannot be
 		// extracted in the same way as echo responses, the data part contains
@@ -200,8 +200,8 @@ Session.prototype.fromBuffer = function (buffer) {
 			var ip_icmp_ip_offset = ip_icmp_offset + 8;
 
 			// Need at least 20 bytes for an IP header, and it should be IPv4
-			if (buffer.length - ip_icmp_ip_offset  < 20
-					|| (buffer[ip_icmp_ip_offset] & 0xf0) != 0x40)
+			if (buffer.length - ip_icmp_ip_offset < 20
+				|| (buffer[ip_icmp_ip_offset] & 0xf0) != 0x40)
 				return;
 
 			// The length of the IPv4 header is in mulitples of double words
@@ -218,41 +218,41 @@ Session.prototype.fromBuffer = function (buffer) {
 	}
 
 	// Response is not for a request we generated
-	if (buffer.readUInt16BE (offset + 4) != this.sessionId)
+	if (buffer.readUInt16BE(offset + 4) != this.sessionId)
 		return;
 
 	buffer[offset + 4] = 0;
-	
-	var id = buffer.readUInt16BE (offset + 6);
+
+	var id = buffer.readUInt16BE(offset + 6);
 	var req = this.reqs[id];
 
-	if (!req)  return null
+	if (!req || req === true) return null
 	req.type = type;
 	req.code = code;
 	return req;
 };
 
 Session.prototype.onBeforeSocketSend = function (req) {
-	this.setTTL (req.ttl ? req.ttl : this.defaultTTL);
-	
-	this.getSocket ().setOption (raw.SocketLevel.IPPROTO_IP, raw.SocketOption.IP_HDRINCL, req.options.src ? 1 : 0);
+	this.setTTL(req.ttl ? req.ttl : this.defaultTTL);
+
+	this.getSocket().setOption(raw.SocketLevel.IPPROTO_IP, raw.SocketOption.IP_HDRINCL, req.options.src ? 1 : 0);
 }
 
 Session.prototype.onSocketClose = function () {
-	this.emit ("close");
-	this.flush (new Error ("Socket closed"));
+	this.emit("close");
+	this.flush(new Error("Socket closed"));
 };
 
 Session.prototype.onSocketError = function (error) {
-	this.emit ("error", error);
+	this.emit("error", error);
 };
 
 Session.prototype.onSocketMessage = function (buffer, source) {
 	if (this._debug)
-		this._debugResponse (source, buffer);
+		this._debugResponse(source, buffer);
 
 	const now = process.hrtime()
-	var req = this.fromBuffer (buffer);
+	var req = this.fromBuffer(buffer);
 	if (req) {
 		/**
 		 ** If we ping'd ourself (i.e. 127.0.0.1 or ::1) then it is likely we
@@ -268,69 +268,69 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 			if (req.type == 8)
 				return;
 		}
-		
-		if(source == req.target) {
-			this.reqRemove (req.id);
+
+		if (source == req.target) {
+			this.reqRemove(req.id);
 		}
-		
+
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
-				req.callback (new DestinationUnreachableError (source), req.target,
-						req.sent, now, source);
+				req.callback(new DestinationUnreachableError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 2) {
-				req.callback (new PacketTooBigError (source), req.target,
-						req.sent, now, source);
+				req.callback(new PacketTooBigError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 3) {
-				req.callback (new TimeExceededError (source), req.target,
-						req.sent, now, source);
+				req.callback(new TimeExceededError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 4) {
-				req.callback (new ParameterProblemError (source), req.target,
-						req.sent, now, source);
+				req.callback(new ParameterProblemError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 129) {
-				req.callback (null, req.target,
-						req.sent, now, source);
+				req.callback(null, req.target,
+					req.sent, now, source);
 			} else {
-				req.callback (new Error ("Unknown response type '" + req.type
-						+ "' (source=" + source + ")"), req.target,
-						req.sent, now, source);
+				req.callback(new Error("Unknown response type '" + req.type
+					+ "' (source=" + source + ")"), req.target,
+					req.sent, now, source);
 			}
 		} else {
 			if (req.type == 0) {
-				req.callback (null, req.target,
-						req.sent, now, source);
+				req.callback(null, req.target,
+					req.sent, now, source);
 			} else if (req.type == 3) {
-				req.callback (new DestinationUnreachableError (source), req.target,
-						req.sent, now, source);
+				req.callback(new DestinationUnreachableError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 4) {
-				req.callback (new SourceQuenchError (source), req.target,
-						req.sent, now, source);
+				req.callback(new SourceQuenchError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 5) {
-				req.callback (new RedirectReceivedError (source), req.target,
-						req.sent, now, source);
+				req.callback(new RedirectReceivedError(source), req.target,
+					req.sent, now, source);
 			} else if (req.type == 11) {
-				req.callback (new TimeExceededError (source), req.target,
-						req.sent, now, source);
+				req.callback(new TimeExceededError(source), req.target,
+					req.sent, now, source);
 			} else {
-				req.callback (new Error ("Unknown response type '" + req.type
-						+ "' (source=" + source + ")"), req.target,
-						req.sent, now, source);
+				req.callback(new Error("Unknown response type '" + req.type
+					+ "' (source=" + source + ")"), req.target,
+					req.sent, now, source);
 			}
 		}
 	}
 };
 
 Session.prototype.onSocketSend = function (req, error, bytes) {
-	if (! req.sent)
+	if (!req.sent)
 		req.sent = process.hrtime();
 	if (error) {
-		this.reqRemove (req.id);
-		req.callback (error, req.target, req.sent, req.sent);
+		this.reqRemove(req.id);
+		req.callback(error, req.target, req.sent, req.sent);
 	} else {
-		if(req.aggressiveCount){
+		if (req.aggressiveCount) {
 			this.send(req)
-		}else{
-      if(req.timer) clearTimeout(req.timer);
-			req.timer = setTimeout (this.onTimeout.bind (this, req), req.timeout);
+		} else {
+			if (req.timer) clearTimeout(req.timer);
+			req.timer = setTimeout(this.onTimeout.bind(this, req), req.timeout);
 		}
 	}
 };
@@ -338,11 +338,11 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 Session.prototype.onTimeout = function (req) {
 	if (req.retries > 0) {
 		req.retries--;
-		this.send (req);
+		this.send(req);
 	} else {
-		this.reqRemove (req.id);
-		req.callback (new RequestTimedOutError ("Request timed out"),
-				req.target, req.sent, process.hrtime());
+		this.reqRemove(req.id);
+		req.callback(new RequestTimedOutError("Request timed out"),
+			req.target, req.sent, process.hrtime());
 	}
 };
 
@@ -358,25 +358,29 @@ Session.prototype._generateId = function () {
 			return this.nextId;
 		}
 		// No free request IDs
-		if (this.nextId == startId)
+		if (this.nextId == startId) {
+			if (this._debug) {
+				console.log("No free requests IDs\n");
+			}
 			return;
+		}
 	}
 }
 
 Session.prototype.pingHost = function (target, callback = undefined, options = {}) {
 	let ret = this
-	if(!callback){
-		ret = new Promise((resolve, reject)=>{
-			callback = (err, target)=>{
-				if(err) reject(err)
+	if (!callback) {
+		ret = new Promise((resolve, reject) => {
+			callback = (err, target) => {
+				if (err) reject(err)
 				else resolve(target)
 			}
 		})
 	}
 
-	var id = this._generateId ();
-	if (! id) {
-		callback (new Error ("Too many requests outstanding"), target);
+	var id = this._generateId();
+	if (!id) {
+		callback(new Error("Too many requests outstanding"), target);
 		return ret;
 	}
 
@@ -391,58 +395,64 @@ Session.prototype.pingHost = function (target, callback = undefined, options = {
 		aggressiveCount: options.aggressiveCount
 	};
 
-	this.reqQueue (req);
+	this.reqQueue(req);
 
 	return ret;
 };
 
 Session.prototype.reqQueue = function (req) {
-	req.buffer = this.toBuffer (req);
+	req.buffer = this.toBuffer(req);
 
 	if (this._debug)
-		this._debugRequest (req.target, req);
+		this._debugRequest(req.target, req);
 
-	const previousRequest = this.reqs[req.id] 
+	const previousRequest = this.reqs[req.id]
 	this.reqs[req.id] = req;
-	if(previousRequest){
+	if (previousRequest) {
 		req.sent = previousRequest.sent
 	}
 	this.reqsPending++;
-	this.send (req);
-	
+	this.send(req);
+
 	return this;
 }
 
 Session.prototype.reqRemove = function (id) {
 	var req = this.reqs[id];
 	if (req) {
-		if(req.timer){
-			clearTimeout (req.timer);
+		if (req.timer) {
+			clearTimeout(req.timer);
 			req.timer = null
 		}
-		delete this.reqs[req.id];
+		this.reqs[id] = true;
+
+		// Intermediary responses can arrive later than the final response
+		// Allow an extra second before returning an ID to the queue for re-use
+		setTimeout(() => {
+			delete this.reqs[id]
+		}, 1000)
 		this.reqsPending--;
 	}
 	// If we have no more outstanding requests pause readable events
 	if (this.reqsPending <= 0)
-		if (! this.getSocket ().recvPaused)
-			this.getSocket ().pauseRecv ();
+		if (!this.getSocket().recvPaused)
+			this.getSocket().pauseRecv();
 	return req;
 };
 
 Session.prototype.send = function (req) {
 	var buffer = req.buffer;
 	// Resume readable events if the raw socket is paused
-	if (this.getSocket ().recvPaused)
-		this.getSocket ().resumeRecv ();
+	if (this.getSocket().recvPaused)
+		this.getSocket().resumeRecv();
 
-	if(req.aggressiveCount){
-		req.aggressiveCount --
+	if (req.aggressiveCount) {
+		req.aggressiveCount--
 	}
-	
-	this.getSocket ().send (buffer, 0, buffer.length, req.target,
-			this.onBeforeSocketSend.bind (this, req),
-			this.onSocketSend.bind (this, req));
+
+	this.getSocket().send(buffer, 0, buffer.length, req.target,
+		this.onBeforeSocketSend.bind(this, req),
+		this.onSocketSend.bind(this, req));
 };
 
 Session.prototype.setTTL = function (ttl) {
@@ -450,25 +460,25 @@ Session.prototype.setTTL = function (ttl) {
 		return;
 
 	var level = this.addressFamily == raw.AddressFamily.IPv6
-			? raw.SocketLevel.IPPROTO_IPV6
-			: raw.SocketLevel.IPPROTO_IP;
-	this.getSocket ().setOption (level, raw.SocketOption.IP_TTL, ttl);
+		? raw.SocketLevel.IPPROTO_IPV6
+		: raw.SocketLevel.IPPROTO_IP;
+	this.getSocket().setOption(level, raw.SocketOption.IP_TTL, ttl);
 	this.ttl = ttl;
 }
 
 Session.prototype.setInterface = function (iface) {
-	if(this.iface == iface) return
+	if (this.iface == iface) return
 	iface = Buffer.from(iface)
-	this.getSocket ().setOption ( raw.SocketLevel.SOL_SOCKET, raw.SocketOption.SO_BINDTODEVICE, iface, iface.length);
+	this.getSocket().setOption(raw.SocketLevel.SOL_SOCKET, raw.SocketOption.SO_BINDTODEVICE, iface, iface.length);
 	this.iface = iface;
 }
 
 
-Session.prototype.buildIpHeader = function(req, payload){
+Session.prototype.buildIpHeader = function (req, payload) {
 
 	const protocol = this.addressFamily == raw.AddressFamily.IPv6
-			? raw.Protocol.ICMPv6
-			: raw.Protocol.ICMP;
+		? raw.Protocol.ICMPv6
+		: raw.Protocol.ICMP;
 	const version = this.addressFamily == raw.AddressFamily.IPv6 ? 6 : 4
 
 	return IpPacket.encode({
@@ -483,19 +493,19 @@ Session.prototype.buildIpHeader = function(req, payload){
 
 Session.prototype.toBuffer = function (req) {
 	const packetSize = req.options.packetSize || this.packetSize
-	var buffer = Buffer.alloc (packetSize);
+	var buffer = Buffer.alloc(packetSize);
 
 	var type = this.addressFamily == raw.AddressFamily.IPv6 ? 128 : 8;
 
-	buffer.writeUInt8 (type, 0);
-	buffer.writeUInt8 (0, 1);
-	buffer.writeUInt16BE (0, 2);
-	buffer.writeUInt16BE (this.sessionId, 4);
-	buffer.writeUInt16BE (req.id, 6);
+	buffer.writeUInt8(type, 0);
+	buffer.writeUInt8(0, 1);
+	buffer.writeUInt16BE(0, 2);
+	buffer.writeUInt16BE(this.sessionId, 4);
+	buffer.writeUInt16BE(req.id, 6);
 
-	raw.writeChecksum (buffer, 2, raw.createChecksum (buffer));
+	raw.writeChecksum(buffer, 2, raw.createChecksum(buffer));
 
-	if(req.options.src){
+	if (req.options.src) {
 		buffer = this.buildIpHeader(req, buffer)
 	}
 
@@ -503,31 +513,31 @@ Session.prototype.toBuffer = function (req) {
 };
 
 Session.prototype.traceRouteCallback = function (trace, req, error, target,
-		sent, rcvd, source = null) {
-	if (trace.feedCallback (error, target, req.ttl, sent, rcvd, source)) {
-    if(req.timer) clearTimeout(req.timer);
-		trace.doneCallback (new Error ("Trace forcibly stopped"), target);
+	sent, rcvd, source = null) {
+	if (trace.feedCallback(error, target, req.ttl, sent, rcvd, source)) {
+		if (req.timer) clearTimeout(req.timer);
+		trace.doneCallback(new Error("Trace forcibly stopped"), target);
 		return;
 	}
 
 	if (error) {
 		if (req.ttl >= trace.ttl) {
-      if(req.timer) clearTimeout(req.timer);
-			trace.doneCallback (error, target);
-			return;
-		}
-		
-		if ((error instanceof RequestTimedOutError) && ++trace.timeouts > trace.maxHopTimeouts) {
-      if(req.timer) clearTimeout(req.timer);
-			trace.doneCallback (new Error ("Too many timeouts"), target);
+			if (req.timer) clearTimeout(req.timer);
+			trace.doneCallback(error, target);
 			return;
 		}
 
-		var id = this._generateId ();
-		if (! id) {
-      if(req.timer) clearTimeout(req.timer);
-			trace.doneCallback (new Error ("Too many requests outstanding"),
-					target);
+		if ((error instanceof RequestTimedOutError) && ++trace.timeouts > trace.maxHopTimeouts) {
+			if (req.timer) clearTimeout(req.timer);
+			trace.doneCallback(new Error("Too many timeouts"), target);
+			return;
+		}
+
+		var id = this._generateId();
+		if (!id) {
+			if (req.timer) clearTimeout(req.timer);
+			trace.doneCallback(new Error("Too many requests outstanding"),
+				target);
 			return;
 		}
 
@@ -535,20 +545,20 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 		req.id = id;
 		req.retries = this.retries;
 		req.sent = null;
-		this.reqQueue (req);
+		this.reqQueue(req);
 	} else {
-    if(req.timer) clearTimeout(req.timer);
-		trace.doneCallback (null, target);
+		if (req.timer) clearTimeout(req.timer);
+		trace.doneCallback(null, target);
 	}
 }
 
 Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
-		doneCallback) {
+	doneCallback) {
 	// signature was (target, feedCallback, doneCallback)
-	if (! doneCallback) {
+	if (!doneCallback) {
 		doneCallback = feedCallback;
 		feedCallback = ttlOrOptions;
-		ttlOrOptions = {ttl: this.ttl};
+		ttlOrOptions = { ttl: this.ttl };
 	}
 
 	var maxHopTimeouts = 5;
@@ -565,14 +575,14 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 			startTtl = ttlOrOptions.startTtl;
 	} else {
 		ttl = ttlOrOptions;
-		options = {ttl}
+		options = { ttl }
 	}
 
-	var id = this._generateId ();
-	if (! id) {
+	var id = this._generateId();
+	if (!id) {
 		var sent = process.hrtime();
-		doneCallback (new Error ("Too many requests outstanding"), target,
-				sent, sent);
+		doneCallback(new Error("Too many requests outstanding"), target,
+			sent, sent);
 		return this;
 	}
 
@@ -593,15 +603,15 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 		target: target
 	};
 
-	req.callback = this.traceRouteCallback.bind (this, trace, req);
-	
-	this.reqQueue (req);
+	req.callback = this.traceRouteCallback.bind(this, trace, req);
+
+	this.reqQueue(req);
 
 	return this;
 };
 
 exports.createSession = function (options) {
-	return new Session (options || {});
+	return new Session(options || {});
 };
 
 exports.NetworkProtocol = NetworkProtocol;
