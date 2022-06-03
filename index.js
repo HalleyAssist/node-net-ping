@@ -125,6 +125,7 @@ Session.prototype._debugResponse = function (source, buffer) {
 Session.prototype.flush = function (error) {
 	for (var id in this.reqs) {
 		var req = this.reqRemove(id);
+		if(!req) continue
 		var sent = req.sent ? req.sent : process.hrtime();
 		req.callback(error, req.target, sent, process.hrtime());
 	}
@@ -358,8 +359,9 @@ Session.prototype._generateId = function () {
 			return this.nextId;
 		}
 		// No free request IDs
-		if (this.nextId == startId) {
-			if (this._debug) {
+		if (this.nextId == startId) 
+		{
+			if(this._debug){
 				console.log("No free requests IDs\n");
 			}
 			return;
@@ -419,7 +421,7 @@ Session.prototype.reqQueue = function (req) {
 
 Session.prototype.reqRemove = function (id) {
 	var req = this.reqs[id];
-	if (req) {
+	if (req && req !== true) {
 		if (req.timer) {
 			clearTimeout(req.timer);
 			req.timer = null
