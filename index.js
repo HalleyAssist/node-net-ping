@@ -321,8 +321,7 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 };
 
 Session.prototype.onSocketSend = function (req, error, bytes) {
-	if (!req.sent)
-		req.sent = process.hrtime();
+	req.sent = process.hrtime();
 	if (error) {
 		this.reqRemove(req.id);
 		req.callback(error, req.target, req.sent, req.sent);
