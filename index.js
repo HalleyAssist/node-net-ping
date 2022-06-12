@@ -529,10 +529,14 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 			return;
 		}
 
-		if ((error instanceof RequestTimedOutError) && ++trace.timeouts > trace.maxHopTimeouts) {
-			if (req.timer) clearTimeout(req.timer);
-			trace.doneCallback(new Error("Too many timeouts"), target);
-			return;
+		if(error instanceof RequestTimedOutError){
+			if (++trace.timeouts > trace.maxHopTimeouts) {
+				if (req.timer) clearTimeout(req.timer);
+				trace.doneCallback(new Error("Too many timeouts"), target);
+				return;
+			}
+		} else {
+			trace.timeouts = 0
 		}
 
 		var id = this._generateId();
