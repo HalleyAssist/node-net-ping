@@ -420,19 +420,23 @@ Session.prototype.reqQueue = function (req) {
 
 Session.prototype.reqRemove = function (id) {
 	var req = this.reqs[id];
-	if (req && req !== true) {
-		if (req.timer) {
-			clearTimeout(req.timer);
-			req.timer = null
-		}
-		this.reqs[id] = true;
+	if (req) {
+		if(req !== true){
+			if (req.timer) {
+				clearTimeout(req.timer);
+				req.timer = null
+			}
+			this.reqs[id] = true;
 
-		// Intermediary responses can arrive later than the final response
-		// Allow an extra second before returning an ID to the queue for re-use
-		setTimeout(() => {
-			delete this.reqs[id]
-		}, 1000)
-		this.reqsPending--;
+			// Intermediary responses can arrive later than the final response
+			// Allow an extra second before returning an ID to the queue for re-use
+			setTimeout(() => {
+				delete this.reqs[id]
+			}, 1000)
+			this.reqsPending--;
+		} else {
+			req = null
+		}
 	}
 	// If we have no more outstanding requests pause readable events
 	if (this.reqsPending <= 0)
