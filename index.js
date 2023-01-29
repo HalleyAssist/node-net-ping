@@ -270,9 +270,7 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 				return;
 		}
 
-		if (source == req.target) {
-			this.reqRemove(req.id);
-		}
+		this.reqRemove(req.id);
 
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
