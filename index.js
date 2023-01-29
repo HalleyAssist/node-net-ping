@@ -327,6 +327,7 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 		req.callback(error, req.target, req.sent, req.sent);
 	} else {
 		if (req.aggressiveCount) {
+			// send it again with the timer being set on the final transmission
 			this.send(req)
 		} else {
 			if (req.timer) clearTimeout(req.timer);
@@ -519,7 +520,15 @@ Session.prototype.toBuffer = function (req) {
 
 Session.prototype.traceRouteCallback = function (trace, req, error, target,
 	sent, rcvd, source = null) {
-	if (trace.feedCallback(error, target, req.ttl, sent, rcvd, source)) {
+
+	let feedCallbackResult
+	try {
+		feedCallbackResult = trace.feedCallback(error, target, req.ttl, sent, rcvd, source)
+	} catch(ex){
+		trace.doneCallback(ex, target)
+		return
+	}
+	if (feedCallbackResult) {
 		if (req.timer) clearTimeout(req.timer);
 		trace.doneCallback(new Error("Trace forcibly stopped"), target);
 		return;

@@ -2,13 +2,16 @@ const NetPing = require('../index')
 
 const {expect} = require('chai')
 
-describe("ping", function(){
+describe("traceroute", function(){
     it('simple 127.0.0.1', async function(){
         this.timeout(1000)
         const session = NetPing.createSession ({timeout: 800, _debug: true});
         try {
             const target = "127.0.0.1"
-            await session.pingHost (target);
+            let r
+            const p = new Promise(resolve => r = resolve)
+            session.traceRoute (target, {}, ()=>{}, r);
+            await p
 
             expect(session.reqsPending).to.be.eql(0)
         } finally {
@@ -21,51 +24,46 @@ describe("ping", function(){
         const session = NetPing.createSession ({timeout: 800, _debug: true});
         try {
             const target = "127.0.0.1"
-            await session.pingHost (target, undefined, {src: "127.0.0.1"});
+            let r
+            const p = new Promise(resolve => r = resolve)
+            session.traceRoute (target, {src: "127.0.0.1"}, ()=>{}, r);
+            await p
 
             expect(session.reqsPending).to.be.eql(0)
         } finally {
             session.close()
         }
     })
-    it('aggressive 127.0.0.1', async function(){
+    it('should still count reqs on exception', async function(){
         this.timeout(1000)
         const session = NetPing.createSession ({timeout: 800, _debug: true});
         try {
             const target = "127.0.0.1"
-            await session.pingHost (target, null, {aggressiveCount: 2});
+            let r
+            const p = new Promise(resolve => r = resolve)
+            session.traceRoute (target, {}, ()=>{
+                throw new Error("test")
+            }, r);
+            await p
 
             expect(session.reqsPending).to.be.eql(0)
         } finally {
             session.close()
         }
     })
-    it('really aggressive 127.0.0.1', async function(){
-        this.timeout(1000)
-        const session = NetPing.createSession ({timeout: 800, _debug: true});
-        try {
-            const target = "127.0.0.1"
-            await session.pingHost (target, null, {aggressiveCount: 20});
-
-            expect(session.reqsPending).to.be.eql(0)
-        } finally {
-            session.close()
-        }
-    })
-    it('aggressive invalid', async function(){
+    it('simple invalid', async function(){
         this.timeout(2000)
-        const session = NetPing.createSession ({timeout: 80, _debug: true});
-        let e
+        const session = NetPing.createSession ({timeout: 100, _debug: true});
         try {
             const target = "0.0.0.1"
-            await session.pingHost (target, null, {aggressiveCount: 2});
+            let r
+            const p = new Promise(resolve => r = resolve)
+            session.traceRoute (target, {}, ()=>{}, r);
+            await p
 
             expect(session.reqsPending).to.be.eql(0)
-        } catch(ex) {
-            e = ex
         } finally {
             session.close()
         }
-        expect(e.message).to.be.eql("Request 2 timed out")
     })
 })

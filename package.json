@@ -14,6 +14,7 @@
     "raw-socket": "git+https://github.com/HalleyAssist/node-raw-socket.git"
   },
   "devDependencies": {
+    "chai": "^4.3.7",
     "mocha": "^8.2.1"
   },
   "contributors": [
