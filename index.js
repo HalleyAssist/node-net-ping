@@ -559,6 +559,9 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 			return;
 		}
 
+		// clone the request as we are changing the ID
+		req = Object.assign({}, req)
+		
 		req.ttl++;
 		req.id = id;
 		req.retries = this.retries;
