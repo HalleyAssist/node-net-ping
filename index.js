@@ -323,26 +323,27 @@ Session.prototype.onSocketSend = function (req, error, bytes) {
 	if (error) {
 		this.reqRemove(req.id);
 		req.callback(error, req.target, req.sent, req.sent);
+		return
+	} 
+	if (req.aggressiveCount) {
+		// send it again with the timer being set on the final transmission
+		this.send(req)
 	} else {
-		if (req.aggressiveCount) {
-			// send it again with the timer being set on the final transmission
-			this.send(req)
-		} else {
-			if (req.timer) clearTimeout(req.timer);
-			req.timer = setTimeout(this.onTimeout.bind(this, req), req.timeout);
-		}
+		if (req.timer) clearTimeout(req.timer);
+		req.timer = setTimeout(this.onTimeout.bind(this, req), req.timeout);
 	}
 };
 
 Session.prototype.onTimeout = function (req) {
-	if (req.retries > 0) {
-		req.retries--;
-		this.send(req);
-	} else {
+	if (req.retries <= 0) {
 		this.reqRemove(req.id);
 		req.callback(new RequestTimedOutError(`Request ${req.id} timed out`),
 			req.target, req.sent, process.hrtime());
+		return
 	}
+
+	req.retries--;
+	this.send(req);
 };
 
 // Keep searching for an ID which is not in use
@@ -497,9 +498,9 @@ Session.prototype.buildIpHeader = function (req, payload) {
 
 Session.prototype.toBuffer = function (req) {
 	const packetSize = req.options.packetSize || this.packetSize
-	var buffer = Buffer.alloc(packetSize);
+	let buffer = Buffer.alloc(packetSize);
 
-	var type = this.addressFamily == raw.AddressFamily.IPv6 ? 128 : 8;
+	const type = this.addressFamily == raw.AddressFamily.IPv6 ? 128 : 8;
 
 	buffer.writeUInt8(type, 0);
 	buffer.writeUInt8(0, 1);
@@ -564,6 +565,9 @@ Session.prototype.traceRouteCallback = function (trace, req, error, target,
 		req.id = id;
 		req.retries = this.retries;
 		req.sent = null;
+
+		req.callback = this.traceRouteCallback.bind(this, trace, req);
+
 		this.reqQueue(req);
 	} else {
 		if (req.timer) clearTimeout(req.timer);
@@ -614,12 +618,13 @@ Session.prototype.traceRoute = function (target, ttlOrOptions, feedCallback,
 	};
 
 	var req = {
-		id: id,
+		id,
 		retries: this.retries,
 		timeout: this.timeout,
-		options: options,
+		options,
 		ttl: startTtl,
-		target: target
+		target,
+		callback: null
 	};
 
 	req.callback = this.traceRouteCallback.bind(this, trace, req);
