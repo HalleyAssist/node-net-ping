@@ -502,8 +502,8 @@ Session.prototype.toBuffer = function (req) {
 
 	const type = this.addressFamily == raw.AddressFamily.IPv6 ? 128 : 8;
 
-	buffer.writeUInt8(type, 0);
-	buffer.writeUInt8(0, 1);
+	buffer[0] = type;
+	buffer[1] = 0; // code
 	buffer.writeUInt16BE(0, 2);
 	buffer.writeUInt16BE(this.sessionId, 4);
 	buffer.writeUInt16BE(req.id, 6);
