@@ -262,15 +262,26 @@ Session.prototype.onSocketMessage = function (buffer, source) {
 		 ** delete the request from the from the request queue since we haven't
 		 ** actually received a response yet.
 		 **/
+		let successPingCode
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 128)
 				return;
+			successPingCode = 129;
 		} else {
 			if (req.type == 8)
 				return;
+			successPingCode = 0;
 		}
 
-		this.reqRemove(req.id);
+		if(req.type != successPingCode || req.target == source){
+			this.reqRemove(req.id);
+		} else {
+			// This is a successful ping but returned from a different source
+			// This is probably a conflict
+			// TODO: if we ever want to support broadcast/multicast pings we need to handle this better
+			//       but these are usually disabled for security reasons
+			return;
+		}
 
 		if (this.addressFamily == raw.AddressFamily.IPv6) {
 			if (req.type == 1) {
@@ -351,7 +362,7 @@ Session.prototype._generateId = function () {
 	var startId = this.nextId++;
 	while (1) {
 		if (this.nextId > 65535)
-			this.nextId = 1;
+			this.nextId = 1; // wrap around, skip 0
 		if (this.reqs[this.nextId]) {
 			this.nextId++;
 		} else {
